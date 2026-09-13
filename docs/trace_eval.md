@@ -28,6 +28,7 @@ Dán 1 đoạn trích xuất log tiêu biểu từ file `docs/trace_waterfall.js
 [
   {
     "step": 1,
+    "query": "Đặt lịch hẹn tư vấn cho SV2026001 vào 14:00 ngày 15/09/2026",
     "action_type": "TOOL_EXECUTION",
     "tool_name": "academic_query",
     "arguments": {
@@ -38,10 +39,42 @@ Dán 1 đoạn trích xuất log tiêu biểu từ file `docs/trace_waterfall.js
       "student_id": "SV2026001",
       "data": {
         "full_name": "Nguyễn Văn An",
-        "gpa": 3.85
+        "class": "AI-K4",
+        "gpa": 3.85,
+        "email": "an.nv@vinuni.edu.vn",
+        "status": "Đang học",
+        "advisor": "PGS.TS Nguyễn Văn A"
       }
     },
-    "latency_ms": 120.5
+    "latency_ms": 7495.24
+  },
+  {
+    "step": 2,
+    "query": "Đặt lịch hẹn tư vấn cho SV2026001 vào 14:00 ngày 15/09/2026",
+    "action_type": "TOOL_EXECUTION",
+    "tool_name": "schedule_appointment",
+    "arguments": {
+      "student_id": "SV2026001",
+      "advisor_name": "PGS.TS Nguyễn Văn A",
+      "datetime_str": "14:00 15/09/2026"
+    },
+    "observation": {
+      "status": "SUCCESS",
+      "booking_id": "BK-SV2026001-99",
+      "student_id": "SV2026001",
+      "datetime": "14:00 15/09/2026",
+      "advisor": "PGS.TS Nguyễn Văn A",
+      "message": "Đặt lịch thành công cho sinh viên SV2026001 với PGS.TS Nguyễn Văn A vào lúc 14:00 15/09/2026."
+    },
+    "latency_ms": 3316.48
+  },
+  {
+    "step": 3,
+    "query": "Đặt lịch hẹn tư vấn cho SV2026001 vào 14:00 ngày 15/09/2026",
+    "action_type": "FINAL_ANSWER",
+    "thought": "Gemini phản hồi trực tiếp bằng văn bản (không cần gọi công cụ).",
+    "output": "Lịch hẹn tư vấn học vụ của bạn đã được đặt thành công! Dưới đây là thông tin chi tiết:\n\n* **Mã lịch hẹn (Booking ID):** BK-SV2026001-99\n* **Sinh viên:** Nguyễn Văn An (Mã SV: SV2026001)\n* **Lớp:** AI-K4\n* **Cố vấn học tập:** PGS.TS Nguyễn Văn A\n* **Thời gian:** 14:00 ngày 15/09/2026\n\nThông tin xác nhận và hướng dẫn chi tiết đã được gửi tới email sinh viên: `an.nv@vinuni.edu.vn`. Bạn vui lòng có mặt đúng giờ nhé!",
+    "latency_ms": 2657.28
   }
 ]
 ```
