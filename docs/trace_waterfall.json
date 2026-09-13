@@ -1,29 +1,10 @@
 [
   {
     "step": 1,
-    "query": "Chào bạn, bạn có thể giới thiệu quy chế học vụ cơ bản của Đại học VinUni không?",
+    "query": "Quy chế học vụ VinUni yêu cầu bao nhiêu tín chỉ?",
     "action_type": "FINAL_ANSWER",
-    "thought": "Câu hỏi chung về quy chế học vụ, trả lời trực tiếp không cần gọi Tool.",
-    "output": "[Mock Agent Response]: Xin chào! Quy chế học vụ VinUni yêu cầu sinh viên tích lũy tối thiểu 120 tín chỉ và duy trì GPA trên 2.0 để tốt nghiệp.",
-    "latency_ms": 2845.93
-  },
-  {
-    "step": 1,
-    "query": "Hãy tra cứu thông tin học vụ của sinh viên SV2026001.",
-    "action_type": "TOOL_EXECUTION",
-    "tool_name": "academic_query",
-    "arguments": {
-      "student_id": "SV2026001"
-    },
-    "observation": {},
-    "latency_ms": 799.12
-  },
-  {
-    "step": 2,
-    "query": "Hãy tra cứu thông tin học vụ của sinh viên SV2026001.",
-    "action_type": "FINAL_ANSWER",
-    "thought": "Tổng hợp kết quả từ MCP Server thành công.",
-    "output": "Chưa thể trả lời chi tiết do chưa nhận được dữ liệu từ MCP Server (hãy hoàn thành TODO 2.1).",
-    "latency_ms": 10.0
+    "thought": "Gemini phản hồi trực tiếp bằng văn bản (không cần gọi công cụ).",
+    "output": "Tại Đại học VinUni, số lượng tín chỉ yêu cầu để tốt nghiệp phụ thuộc vào từng ngành học và bậc/hệ đào tạo cụ thể:\n\n* **Chương trình Cử nhân (3 – 4 năm)** *(ví dụ: Quản trị Kinh doanh, Khoa học Máy tính, Kỹ thuật,...)*: Thông thường yêu cầu tối thiểu từ **120 đến 135 tín chỉ** tích lũy.\n* **Chương trình Điều dưỡng (BSN - 4 năm)**: Thường yêu cầu khoảng **120 – 130 tín chỉ**.\n* **Chương trình Bác sĩ Y khoa (MD - 6 năm)**: Khối lượng học tập lớn hơn, thường từ **180 đến trên 200 tín chỉ** (bao gồm cả khối lượng thực hành lâm sàng).\n\n---\n\n**Lưu ý quan trọng:**\n1. **Khối lượng kiến thức bắt buộc:** Ngoài tổng số tín chỉ, sinh viên cần hoàn thành đầy đủ:\n   * Khối kiến thức Giáo dục Khai phóng & Kỹ năng cốt lõi (General Education & OASIS).\n   * Khối kiến thức Cơ sở ngành và Chuyên ngành (Major Core & Major Electives).\n   * Dự án tốt nghiệp / Khóa luận tốt nghiệp hoặc Thực tập doanh nghiệp (Capstone/Internship).\n2. **Yêu cầu điểm số:** Điểm trung bình tích lũy (CGPA) phải đạt mức tối thiểu theo quy chế (thường là từ **2.0/4.0 trở lên**) và không còn nợ môn hoặc vi phạm kỷ luật học vụ.\n\nĐể biết chính xác khung chương trình đào tạo của khóa và ngành học cụ thể, bạn nên tham khảo **Sổ tay Sinh viên (Student Handbook)** trên cổng thông tin VinUni Canvas/Portal hoặc liên hệ trực tiếp với **Cố vấn học tập (Academic Advisor)** của Viện bạn đang theo học.",
+    "latency_ms": 7200.41
   }
 ]

@@ -63,31 +63,70 @@ def run_baseline_chatbot(user_query: str, provider):
 
 def run_react_agent(user_query: str, provider, mcp_server: MCPAcademicServer) -> list:
     """
-    [REACT AGENT LOOP] Thực thi vòng lặp Thought -> Action -> Observation với MCP Server
+    [REACT AGENT LOOP]
+    Thực thi vòng lặp Thought -> Action -> Observation -> Thought ...
+    với MCP Server và Native Tool Calling.
+
     Trả về danh sách trace log của phiên thực thi.
     """
+
     print(f"\n🤖 [REACT AGENT] Câu hỏi: {user_query}")
-    
+
     step = 0
     trace_logs = []
+
     tools_list = mcp_server.list_tools()
-    
+
+    # Lưu lại toàn bộ context của ReAct Loop.
+    # Sau mỗi lần Tool thực thi, Observation sẽ được đưa trở lại LLM.
+    conversation_context = f"User Query: {user_query}"
+
     while step < MAX_ITERATIONS:
+
         step += 1
         step_start_time = time.time()
-        print(f"\n--- 🔄 Vòng lặp ReAct Loop (Step {step}/{MAX_ITERATIONS}) ---")
-        
-        # Gọi LLM với Native Tool Calling Specs
-        llm_response = provider.generate_with_tools(user_query, tools_list, system_prompt=REACT_AGENT_SYSTEM_PROMPT)
-        latency_ms = round((time.time() - step_start_time) * 1000, 2)
-        
-        thought = llm_response.get("thought", "Đang suy luận...")
+
+        print(
+            f"\n--- 🔄 Vòng lặp ReAct Loop "
+            f"(Step {step}/{MAX_ITERATIONS}) ---"
+        )
+
+        # ==========================================================
+        # THOUGHT
+        # Gửi toàn bộ context hiện tại cho LLM.
+        # Context có thể bao gồm User Query + các Observation trước đó.
+        # ==========================================================
+        llm_response = provider.generate_with_tools(
+            conversation_context,
+            tools_list,
+            system_prompt=REACT_AGENT_SYSTEM_PROMPT
+        )
+
+        latency_ms = round(
+            (time.time() - step_start_time) * 1000,
+            2
+        )
+
+        thought = llm_response.get(
+            "thought",
+            "Đang suy luận..."
+        )
+
         print(f"🧠 [Thought]: {thought}")
-        
-        # Trường hợp 1: LLM quyết định trả lời bằng văn bản trực tiếp
+
+        # ==========================================================
+        # FINAL ANSWER
+        # LLM quyết định trả lời trực tiếp.
+        # ==========================================================
         if llm_response.get("type") == "text":
-            final_content = llm_response.get("content", "")
+
+            final_content = llm_response.get(
+                "content",
+                ""
+            )
+
             print(f"🏁 [Final Answer]: {final_content}")
+
             trace_logs.append({
                 "step": step,
                 "query": user_query,
@@ -96,45 +135,55 @@ def run_react_agent(user_query: str, provider, mcp_server: MCPAcademicServer) ->
                 "output": final_content,
                 "latency_ms": latency_ms
             })
+
             break
-            
-        # Trường hợp 2: LLM đề xuất gọi Tool (Action)
+
+        # ==========================================================
+        # ACTION
+        # LLM quyết định gọi Tool.
+        # ==========================================================
         elif llm_response.get("type") == "tool_call":
-            tool_name = llm_response.get("tool_name")
-            arguments = llm_response.get("arguments", {})
-            
-            print(f"🛠️ [Action Proposed]: {tool_name}({arguments})")
-            
-            # Thực thi Tool qua MCP Server
-            mcp_result = mcp_server.call_tool(tool_name, arguments)
-            obs_data = mcp_result.get("result", {})
-            
-            if not obs_data:
-                print(f"👁️ [Observation từ MCP Server]: {{}}")
-                print(f"⚠️ [CHÚ Ý]: MCP Server trả về kết quả rỗng! Học viên cần hoàn thành TODO 2.1 trong 'src/mcp_server.py'.")
-                final_answer = "Chưa thể trả lời chi tiết do chưa nhận được dữ liệu từ MCP Server (hãy hoàn thành TODO 2.1)."
-            else:
-                obs_str = json.dumps(obs_data, ensure_ascii=False)
-                print(f"👁️ [Observation từ MCP Server]: {obs_str}")
-                
-                # Tổng hợp Final Answer từ kết quả Observation thực tế
-                if obs_data.get("status") == "SUCCESS":
-                    if "data" in obs_data:
-                        d = obs_data["data"]
-                        final_answer = (
-                            f"Kết quả tra cứu cho sinh viên {obs_data.get('student_id', '')} ({d.get('full_name', '')}): "
-                            f"Lớp {d.get('class', '')}, GPA: {d.get('gpa', '')}, Email: {d.get('email', '')}, "
-                            f"Trạng thái: {d.get('status', '')}, Cố vấn: {d.get('advisor', '')}."
-                        )
-                    elif "message" in obs_data:
-                        final_answer = obs_data["message"]
-                    else:
-                        final_answer = f"Đã hoàn tất xử lý qua MCP Server: {json.dumps(obs_data, ensure_ascii=False)}"
-                elif obs_data.get("status") == "NOT_FOUND":
-                    final_answer = obs_data.get("message", "Không tìm thấy thông tin sinh viên yêu cầu.")
-                else:
-                    final_answer = f"Phản hồi từ công cụ: {json.dumps(obs_data, ensure_ascii=False)}"
-            
+
+            tool_name = llm_response.get(
+                "tool_name"
+            )
+
+            arguments = llm_response.get(
+                "arguments",
+                {}
+            )
+
+            print(
+                f"🛠️ [Action Proposed]: "
+                f"{tool_name}({arguments})"
+            )
+
+            # ======================================================
+            # Gọi Tool thông qua MCP Server
+            # ======================================================
+            mcp_result = mcp_server.call_tool(
+                tool_name,
+                arguments
+            )
+
+            obs_data = mcp_result.get(
+                "result",
+                {}
+            )
+
+            obs_str = json.dumps(
+                obs_data,
+                ensure_ascii=False
+            )
+
+            print(
+                f"👁️ [Observation từ MCP Server]: "
+                f"{obs_str}"
+            )
+
+            # ======================================================
+            # TRACE TOOL EXECUTION
+            # ======================================================
             trace_logs.append({
                 "step": step,
                 "query": user_query,
@@ -144,23 +193,60 @@ def run_react_agent(user_query: str, provider, mcp_server: MCPAcademicServer) ->
                 "observation": obs_data,
                 "latency_ms": latency_ms
             })
-            
-            # Kết thúc vòng lặp sau khi hoàn tất Observation và xuất Final Answer
-            print(f"🧠 [Thought]: Đã nhận được dữ liệu từ MCP Server. Tổng hợp kết quả phản hồi.")
-            print(f"🏁 [Final Answer]: {final_answer}")
-            
+
+            # ======================================================
+            # OBSERVATION -> LLM
+            #
+            # Đây là phần quan trọng nhất của Task 2.2.
+            #
+            # Không tự tạo Final Answer ở Python.
+            # Thay vào đó đưa Observation trở lại LLM để LLM
+            # quyết định bước tiếp theo.
+            # ======================================================
+            conversation_context += (
+                f"\n\nPrevious Thought: {thought}"
+                f"\nAction: {tool_name}"
+                f"\nAction Arguments: "
+                f"{json.dumps(arguments, ensure_ascii=False)}"
+                f"\nObservation: {obs_str}"
+                "\n\nDựa trên Observation trên, hãy tiếp tục "
+                "suy luận. Nếu cần thêm Tool, hãy gọi Tool. "
+                "Nếu đã đủ thông tin, hãy trả lời người dùng."
+            )
+
+            continue
+
+        # ==========================================================
+        # UNKNOWN RESPONSE
+        # ==========================================================
+        else:
+
+            print(
+                "⚠️ [Agent Warning]: "
+                "LLM trả về response không hợp lệ."
+            )
+
             trace_logs.append({
-                "step": step + 1,
+                "step": step,
                 "query": user_query,
-                "action_type": "FINAL_ANSWER",
-                "thought": "Tổng hợp kết quả từ MCP Server thành công.",
-                "output": final_answer,
-                "latency_ms": 10.0
+                "action_type": "ERROR",
+                "thought": thought,
+                "output": str(llm_response),
+                "latency_ms": latency_ms
             })
+
             break
 
-    return trace_logs
+    # ==============================================================
+    # MAX ITERATIONS
+    # ==============================================================
+    if step >= MAX_ITERATIONS:
+        print(
+            f"⚠️ [ReAct Loop]: Đã đạt giới hạn "
+            f"{MAX_ITERATIONS} iterations."
+        )
 
+    return trace_logs
 
 if __name__ == "__main__":
     print("==========================================================")
